@@ -15,7 +15,17 @@
 
     <main class="main-content">
         <div class="game-area">
-            <!-- Area untuk tombol utama akan ditambahkan di fase selanjutnya -->
+            <div class="button-container">
+                <button id="mainButton" class="main-button">JANGAN DITEKAN</button>
+                
+                <div class="counter-display">
+                    <span class="counter-label">Udah lu tekan:</span>
+                    <span id="clickCount" class="counter-value">0</span>
+                    <span class="counter-label">kali</span>
+                </div>
+                
+                <p id="dynamicMessage" class="dynamic-message">Coba aja kalau berani...</p>
+            </div>
         </div>
     </main>
 
