@@ -105,8 +105,6 @@ function initGame() {
     const mainButton = document.getElementById('mainButton');
     if (mainButton) {
         mainButton.addEventListener('click', handleClick);
-        // Initialize audio context on first user interaction
-        mainButton.addEventListener('click', initAudioContext, { once: true });
     }
 
     console.log('Game ready. Current clicks:', clickCount);
@@ -135,6 +133,7 @@ function initAudioContext() {
 // ============================================
 /**
  * Handle tombol diklik
+ * - Initialize audio context
  * - Increment click count
  * - Update counter display
  * - Simpan ke localStorage
@@ -143,6 +142,10 @@ function initAudioContext() {
  * - Update dynamic message (setiap 3 klik)
  */
 function handleClick() {
+    // BUG FIX #1: Initialize AudioContext SEBELUM playClickSound
+    // Memastikan klik pertama langsung ada suara
+    initAudioContext();
+
     clickCount++;
     console.log('Clicked:', clickCount);
 
@@ -382,8 +385,18 @@ function triggerFlash(color) {
  * Volume rendah, frequency random 200-800 Hz, duration 0.05s
  */
 function playClickSound() {
-    if (audioContext === null || audioContext.state === 'suspended') {
+    // BUG FIX #3: Check null terlebih dahulu
+    if (audioContext === null) {
         return;
+    }
+
+    // BUG FIX #3: Separate check untuk suspended state
+    // Coba resume jika suspended, handle promise rejection
+    if (audioContext.state === 'suspended') {
+        audioContext.resume().catch(err => {
+            console.log('AudioContext resume failed:', err);
+        });
+        return;  // Skip sound ini, tapi context sudah di-resume
     }
 
     try {
@@ -418,13 +431,15 @@ function playClickSound() {
 // ============================================
 /**
  * Hapus efek tertua dari DOM jika sudah terlalu banyak
- * Buat ngakali performa
+ * Buat menjaga performa
  */
 function cleanupOldestEffect() {
     const effectLayer = document.getElementById('effectLayer');
     if (effectLayer && effectLayer.firstChild) {
         const oldestEffect = effectLayer.firstChild;
-        if (oldestEffect) {
+        // BUG FIX #2: Check jika node masih punya parent sebelum remove
+        // Prevents removing nodes yang sudah di-remove sebelumnya
+        if (oldestEffect && oldestEffect.parentNode) {
             oldestEffect.remove();
             effectCount = Math.max(0, effectCount - 1);
         }
